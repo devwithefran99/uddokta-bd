@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { CalendarDays, ImagePlus, MapPin, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,58 @@ export default function CreateEventPage() {
 
   // Today's date for preventing past dates
   const today = new Date().toLocaleDateString("en-CA");
+
+  const [eventType, setEventType] = useState("");
+const [loading, setLoading] = useState(false);
+
+const handleCreateEvent = async (e: FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  const form = e.currentTarget;
+  const formData = new FormData(form);
+
+  const eventData = {
+    title: formData.get("title"),
+    description: formData.get("description"),
+    eventType: eventType,
+    thumbnail: formData.get("thumbnail"),
+    location: formData.get("location"),
+    eventDate: eventDate,
+  };
+
+  if (!eventType) {
+    alert("Please select an event type!");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const response = await fetch("http://localhost:5000/events", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(eventData),
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert("Event created successfully!");
+      form.reset();
+      setEventDate("");
+      setEventType("");
+    } else {
+      alert(result.message);
+    }
+  } catch (error) {
+    console.log(error);
+    alert("Something went wrong!");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -43,7 +95,7 @@ export default function CreateEventPage() {
 
         {/* Event Form */}
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-8">
-          <form className="space-y-6">
+          <form onSubmit={handleCreateEvent} className="space-y-6">
 
             {/* Event Title */}
             <div className="space-y-2">
@@ -72,7 +124,7 @@ export default function CreateEventPage() {
             <div className="space-y-2">
               <Label htmlFor="eventType">Event Type</Label>
 
-              <Select>
+             <Select value={eventType} onValueChange={setEventType}>
                 <SelectTrigger id="eventType" className="h-12 w-full">
                   <SelectValue placeholder="Select event type" />
                 </SelectTrigger>
@@ -163,12 +215,13 @@ export default function CreateEventPage() {
             {/* Submit Button */}
             <div className="border-t border-gray-100 pt-6">
               <Button
-                type="button"
-                className="h-12 w-full bg-[#14A06F] text-base font-semibold hover:bg-[#10875E]"
-              >
-                <Plus size={19} className="mr-2" />
-                Create Event
-              </Button>
+  type="submit"
+  disabled={loading}
+  className="h-12 w-full bg-[#14A06F] text-base font-semibold hover:bg-[#10875E]"
+>
+  <Plus size={19} className="mr-2" />
+  {loading ? "Creating Event..." : "Create Event"}
+</Button>
             </div>
 
           </form>
