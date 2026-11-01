@@ -13,6 +13,7 @@ import {
 const navLinks = [
   { name: "Home", href: "/" },
   { name: "Upcoming Events", href: "/upcoming-events" },
+  { name: "Create Event", href: "/create-event" },
   { name: "About Us", href: "/about" },
 ];
 
@@ -27,7 +28,7 @@ const Navbar = () => {
 <Link href="/" className="flex items-center">
   <Image
     src="/Image/uddokta-logo.png"
-    alt="Kindora Logo"
+    alt="Uddokta-BD Logo"
     width={180}
     height={60}
     priority
@@ -51,17 +52,17 @@ const Navbar = () => {
         {/* Desktop Auth Buttons */}
         <div className="hidden items-center gap-3 md:flex">
           <Link
-            href="/login"
+            href="/signin"
             className="rounded-full px-5 py-2.5 text-sm font-semibold text-[#14532d] transition hover:bg-green-50"
           >
             Sign In
           </Link>
 
           <Link
-            href="/register"
+            href="/signup"
             className="flex items-center gap-2 rounded-full bg-[#14532d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#166534]"
           >
-            Get Started
+            Sign-Up
             <ArrowUpRight size={16} />
           </Link>
         </div>
