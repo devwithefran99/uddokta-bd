@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,21 +10,24 @@ const slides = [
     highlight: "Big Changes.",
     description:
       "Together, we can make our communities stronger. Join hands with people who believe in making a difference.",
-    image: "/image/hero-1.jpg",
+    image:
+      "https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=1600&q=80",
   },
   {
     title: "Be The Reason",
     highlight: "Someone Smiles.",
     description:
       "From helping the needy to protecting nature, every little effort can create a better tomorrow.",
-    image: "/image/hero-2.jpg",
+    image:
+      "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1600&q=80",
   },
   {
     title: "Together We Can",
     highlight: "Change Lives.",
     description:
       "Discover meaningful community events and become part of something bigger than yourself.",
-    image: "/image/hero-3.jpg",
+    image:
+      "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1600&q=80",
   },
 ];
 
@@ -63,11 +65,10 @@ export default function Home() {
           }}
         >
           {/* Dark Overlay */}
-         <div className="absolute inset-0 bg-gradient-to-r from-[#064E3B]/90 via-[#14A06F]/50 to-[#F0562F]/30" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#064E3B]/90 via-[#14A06F]/50 to-[#F0562F]/30" />
 
           {/* Hero Content */}
           <div className="relative z-10 max-w-3xl px-6 py-20 text-white sm:px-10 md:px-16">
-
             <span className="mb-5 inline-block rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs font-semibold tracking-widest backdrop-blur-sm sm:text-sm">
               TOGETHER FOR A BETTER TOMORROW
             </span>
@@ -75,9 +76,7 @@ export default function Home() {
             <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
               {slide.title}
               <br />
-              <span className="text-[#F0562F]">
-                {slide.highlight}
-              </span>
+              <span className="text-[#F0562F]">{slide.highlight}</span>
             </h1>
 
             <p className="mt-5 max-w-xl text-sm leading-7 text-gray-200 sm:text-base md:text-lg">
