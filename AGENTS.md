@@ -31,23 +31,31 @@ Before the final response, run one reporting pass. If candidates remain, from th
 
 ## Project notes
 
-Next.js 16 App Router, React 19, Tailwind CSS v4. `next dev` rewrites only the managed blocks above; this section is safe to edit.
+Next.js 16.4 App Router at the repo root (`app/`, not `src/app`), React 19, Tailwind v4. The README is create-next-app boilerplate; trust this file and the code instead. `next dev` rewrites only the managed blocks above; this section is safe to edit.
 
 ### Commands
-- `npm run dev` / `npm run build` / `npm run lint`
-- `npx next typegen && npx tsc --noEmit` — typecheck routes without a full build. `next build` typechecks but no longer runs ESLint.
-- No test runner is configured. Verify changes by building or hitting the dev server.
+- `npm run dev` / `npm run build` / `npm run start`
+- `npm run lint` runs `eslint` over the whole repo. `next build` typechecks but no longer runs ESLint.
+- `npx next typegen && npx tsc --noEmit` — typecheck without a full build. Run `typegen` after adding or moving routes: `PageProps`/`LayoutProps` are generated into `.next/types`, and `tsc` fails without them.
+- No test runner. Verify with typecheck/build or by hitting the dev server.
+- Known baseline failures: lint reports unescaped apostrophes in `app/joined-events` and `app/signin`, and `tsc` errors on the `Select` `onValueChange` handler in `app/create-event`. Check whether they predate your change instead of chasing them.
+- One `next dev` per project: a second start exits and prints the existing PID. `Can't resolve 'shadcn/tailwind.css'` in dev while `next build` succeeds means stale `.next` state — stop dev, delete `.next`, restart.
 
-### Toolchain quirks
-- Tailwind v4 runs through the `@tailwindcss/turbopack` loader rule in `next.config.ts`; there is no `postcss.config.*`. Do not add a PostCSS setup without replacing this one.
-- `cacheComponents` and `partialPrefetching` are enabled. Follow `node_modules/next/dist/docs/01-app/01-getting-started/08-caching.md` (`"use cache"`, Suspense boundaries) instead of older caching patterns.
-- Route props use globally generated helpers (`LayoutProps<'/'>`, `PageProps<'/x/[id]'>`) with no import. They live in `.next/types`, so run `next typegen` after adding routes or `tsc` fails.
-- Only one `next dev` per project: a second start exits and prints the existing PID. Reuse or kill that process.
-- `Can't resolve 'shadcn/tailwind.css'` in dev while `next build` succeeds means stale `.next` state: stop dev, delete `.next`, restart. The import and package export are valid.
+### Architecture
+- The frontend talks to a **separate API at `http://localhost:5000`**, hardcoded in pages/components. Event pages need that server running; there are no local event routes.
+  - `GET /upcoming-events`, `GET /events`, `GET /events/:id`, `POST /events`, `PATCH/DELETE /events/:id`, `POST /join-event`, `GET /joined-events?email=`.
+  - Don't move these fetches into `app/api` unless the backend move is intentional.
+- Auth is better-auth + MongoDB: `lib/auth.ts` (db `uddokta-bd`), mounted by `app/api/auth/[...all]/route.ts`, client/hooks in `lib/auth-client.ts`. Needs `MONGODB_URI`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` in `.env` (gitignored).
+- `proxy.ts` at the repo root is Next 16's Proxy (renamed middleware). It redirects unauthenticated `/events/*`, `/manage-events`, and `/joined-events` to `/signin`. It only checks that the session cookie exists (better-auth's optimistic check), not that the session is valid; `/create-event` is not in the matcher.
+- Routes: `/`, `/about`, `/upcoming-events`, `/events/[id]`, `/create-event`, `/manage-events`, `/joined-events`, `/signin`, `/signup`. `signin` still links to `/register`; the real route is `/signup`.
+- `components/ui` holds shadcn primitives, `components/shared` Navbar/Footer, `components/home` landing sections. `@/*` maps to the repo root.
+- `toast` from `react-toastify` is called in Navbar/auth/manage-events, but no `ToastContainer` is mounted in `app/layout.tsx`, so toasts do not render yet.
 
-### UI / styling
-- shadcn `base-nova` style uses Base UI (`@base-ui/react`), not Radix. `components/ui/*` import `@base-ui/react`, `class-variance-authority`, and `cn` directly, so those must stay in `package.json` even if the generator does not add them.
-- Class merging is `import { cn } from "cn"` (shadcn's `cn` package, replacing clsx + tailwind-merge); `lib/utils.ts` re-exports it. Do not switch to clsx/tailwind-merge.
-- `@/*` maps to the repo root. `components/ui` holds shadcn primitives; `components/shared` holds app components.
-- Brand green is hardcoded (`#14532d`, hover `#166534`) in components. The shadcn tokens in `app/globals.css` are neutral defaults, so reuse the green rather than the default palette.
+### Toolchain / styling
+- `cacheComponents` and `partialPrefetching` are enabled. Use `"use cache"` and Suspense per `node_modules/next/dist/docs/01-app/01-getting-started/08-caching.md`, not older caching patterns.
+- Tailwind v4 runs through the `@tailwindcss/turbopack` loader rule in `next.config.ts`; there is no `postcss.config.*`. Do not add a PostCSS setup without replacing it.
+- shadcn `base-nova` uses Base UI (`@base-ui/react`), not Radix. Keep `@base-ui/react`, `class-variance-authority`, `cn`, and `tw-animate-css` in `package.json` even if a generator omits them.
+- Class merging is `import { cn } from "cn"` (the `cn` package, not clsx/tailwind-merge); `lib/utils.ts` re-exports it.
+- The font is Belgrano (`--font-belgrano`) in `app/layout.tsx`, not Geist.
+- Colors are hardcoded and two greens coexist: pages/home use `#14A06F` (hover `#10875E`, sometimes `#10865D`), orange `#F0562F`, hero `#064E3B`; the Navbar uses `#14532d` (hover `#166534`). `app/globals.css` tokens are neutral shadcn defaults — match the neighboring component instead of substituting them.
 - `public/Image/` is capitalized; asset paths must match case (`/Image/uddokta-logo.png`) or break on Linux/Vercel.

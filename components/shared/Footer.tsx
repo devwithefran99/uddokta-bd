@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { Facebook, Instagram, Linkedin, Mail, MapPin } from "lucide-react";
 
+// Evaluate once per server start instead of during render; `new Date()` inside
+// a component blocks prerendering when cacheComponents is enabled.
+const currentYear = new Date().getFullYear();
+
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300">
@@ -69,7 +73,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="mt-10 border-t border-gray-700 pt-6 text-center text-sm text-gray-500">
-          © {new Date().getFullYear()} Uddokta-BD. All rights reserved.
+          © {currentYear} Uddokta-BD. All rights reserved.
         </div>
       </div>
     </footer>
