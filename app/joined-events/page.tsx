@@ -51,7 +51,7 @@ export default function JoinedEventsPage() {
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-gray-500">Loading joined events...</p>
+        <p className="text-gray-500 dark:text-gray-400">Loading joined events...</p>
       </div>
     );
   }
@@ -59,7 +59,7 @@ export default function JoinedEventsPage() {
   if (!session) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
-        <h2 className="text-2xl font-bold text-gray-800">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
           Please Sign In
         </h2>
         <Link
@@ -73,7 +73,7 @@ export default function JoinedEventsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F9FAFB] px-4 py-12">
+    <main className="min-h-screen bg-[#F9FAFB] dark:bg-gray-950 px-4 py-12">
       <div className="mx-auto max-w-6xl">
 
         <div className="mb-10">
@@ -81,26 +81,26 @@ export default function JoinedEventsPage() {
             YOUR ACTIVITIES
           </p>
 
-          <h1 className="mt-2 text-3xl font-bold text-[#1F2937] sm:text-4xl">
+          <h1 className="mt-2 text-3xl font-bold text-[#1F2937] dark:text-white sm:text-4xl">
             Joined Events
           </h1>
 
-          <p className="mt-3 text-gray-500">
+          <p className="mt-3 text-gray-500 dark:text-gray-400">
             All the events you have joined in one place.
           </p>
 
-          <p className="mt-4 font-medium text-gray-700">
+          <p className="mt-4 font-medium text-gray-700 dark:text-gray-300">
             Total Joined Events: {events.length}
           </p>
         </div>
 
         {events.length === 0 ? (
-          <div className="rounded-2xl bg-white py-16 text-center shadow-sm">
-            <h2 className="text-xl font-bold text-gray-800">
+          <div className="rounded-2xl bg-white dark:bg-gray-900 py-16 text-center shadow-sm">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
               You haven't joined any events yet!
             </h2>
 
-            <p className="mt-2 text-gray-500">
+            <p className="mt-2 text-gray-500 dark:text-gray-400">
               Explore upcoming events and join one.
             </p>
 
@@ -117,7 +117,7 @@ export default function JoinedEventsPage() {
             {events.map((event) => (
               <div
                 key={event._id}
-                className="overflow-hidden rounded-2xl bg-white shadow-sm transition hover:shadow-md"
+                className="overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-sm transition hover:shadow-md"
               >
                 <div className="relative h-52">
                   <Image
@@ -130,11 +130,11 @@ export default function JoinedEventsPage() {
                 </div>
 
                 <div className="p-5">
-                  <h2 className="text-xl font-bold text-gray-800">
+                  <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
                     {event.eventTitle}
                   </h2>
 
-                  <div className="mt-4 space-y-3 text-sm text-gray-500">
+                  <div className="mt-4 space-y-3 text-sm text-gray-500 dark:text-gray-400">
                     <p className="flex items-center gap-2">
                       <CalendarDays size={17} className="text-[#14A06F]" />
                       {new Date(event.eventDate).toLocaleDateString()}

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { authClient } from "@/lib/auth-client";
 import {
   Select,
   SelectContent,
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/select";
 
 export default function CreateEventPage() {
+  const { data: session } = authClient.useSession();
   const [eventDate, setEventDate] = useState("");
 
   // Today's date for preventing past dates
@@ -32,13 +34,14 @@ const handleCreateEvent = async (e: FormEvent<HTMLFormElement>) => {
   const formData = new FormData(form);
 
   const eventData = {
-    title: formData.get("title"),
-    description: formData.get("description"),
-    eventType: eventType,
-    thumbnail: formData.get("thumbnail"),
-    location: formData.get("location"),
-    eventDate: eventDate,
-  };
+  title: formData.get("title"),
+  description: formData.get("description"),
+  eventType: eventType,
+  thumbnail: formData.get("thumbnail"),
+  location: formData.get("location"),
+  eventDate: eventDate,
+  creatorEmail: session?.user?.email,
+};
 
   if (!eventType) {
     alert("Please select an event type!");
@@ -75,7 +78,7 @@ const handleCreateEvent = async (e: FormEvent<HTMLFormElement>) => {
 };
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl">
 
         {/* Page Heading */}
@@ -84,17 +87,17 @@ const handleCreateEvent = async (e: FormEvent<HTMLFormElement>) => {
             Share an Opportunity
           </span>
 
-          <h1 className="mt-4 text-3xl font-bold text-gray-900 sm:text-4xl">
+          <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
             Create an Event
           </h1>
 
-          <p className="mt-3 text-gray-500">
+          <p className="mt-3 text-gray-500 dark:text-gray-400">
             Organize a meaningful event and bring your community together.
           </p>
         </div>
 
         {/* Event Form */}
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-8">
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm sm:p-8">
           <form onSubmit={handleCreateEvent} className="space-y-6">
 
             {/* Event Title */}
@@ -150,7 +153,7 @@ const handleCreateEvent = async (e: FormEvent<HTMLFormElement>) => {
               <div className="relative">
                 <ImagePlus
                   size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
                 />
 
                 <Input
@@ -162,7 +165,7 @@ const handleCreateEvent = async (e: FormEvent<HTMLFormElement>) => {
                 />
               </div>
 
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-400 dark:text-gray-500">
                 Provide a valid image URL for your event.
               </p>
             </div>
@@ -174,7 +177,7 @@ const handleCreateEvent = async (e: FormEvent<HTMLFormElement>) => {
               <div className="relative">
                 <MapPin
                   size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
                 />
 
                 <Input
@@ -193,7 +196,7 @@ const handleCreateEvent = async (e: FormEvent<HTMLFormElement>) => {
               <div className="relative">
                 <CalendarDays
                   size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
                 />
 
                 <Input
@@ -207,13 +210,13 @@ const handleCreateEvent = async (e: FormEvent<HTMLFormElement>) => {
                 />
               </div>
 
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-400 dark:text-gray-500">
                 Select a future date for your event.
               </p>
             </div>
 
             {/* Submit Button */}
-            <div className="border-t border-gray-100 pt-6">
+            <div className="border-t border-gray-100 dark:border-gray-800 pt-6">
               <Button
   type="submit"
   disabled={loading}

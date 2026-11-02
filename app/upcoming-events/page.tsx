@@ -50,19 +50,19 @@ export default function UpcomingEventsPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Page Header */}
-      <section className="border-b border-gray-100 bg-white">
+      <section className="border-b border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-950">
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
           <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-[#14A06F]">
             Discover & Participate
           </p>
 
-          <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
             Upcoming Events
           </h1>
 
-          <p className="mt-4 max-w-2xl text-gray-500">
+          <p className="mt-4 max-w-2xl text-gray-500 dark:text-gray-400">
             Find meaningful events around you, connect with your community,
             and become part of something positive.
           </p>
@@ -73,11 +73,11 @@ export default function UpcomingEventsPage() {
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
               Explore Events
             </h2>
 
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Find an event and join the community.
             </p>
           </div>
@@ -89,17 +89,17 @@ export default function UpcomingEventsPage() {
 
         {/* Loading State */}
         {loading ? (
-          <p className="py-10 text-center text-gray-500">
+          <p className="py-10 text-center text-gray-500 dark:text-gray-400">
             Loading events...
           </p>
         ) : events.length === 0 ? (
           /* Empty State */
-          <div className="rounded-xl bg-white py-16 text-center">
-            <h2 className="text-xl font-semibold text-gray-800">
+          <div className="rounded-xl bg-white dark:bg-gray-900 py-16 text-center">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
               No Upcoming Events Found
             </h2>
 
-            <p className="mt-2 text-gray-500">
+            <p className="mt-2 text-gray-500 dark:text-gray-400">
               There are no upcoming events at the moment.
             </p>
           </div>
@@ -109,7 +109,7 @@ export default function UpcomingEventsPage() {
             {events.map((event) => (
               <article
                 key={event._id}
-                className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+                className="overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
               >
                 {/* Event Image */}
                 <div className="relative h-56 overflow-hidden">
@@ -121,14 +121,14 @@ export default function UpcomingEventsPage() {
                     className="object-cover transition duration-500 hover:scale-105"
                   />
 
-                  <span className="absolute left-4 top-4 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#14A06F] shadow-sm">
+                  <span className="absolute left-4 top-4 rounded-full bg-white dark:bg-gray-900 px-3 py-1.5 text-xs font-semibold text-[#14A06F] shadow-sm">
                     {event.eventType}
                   </span>
                 </div>
 
                 {/* Event Information */}
                 <div className="p-5">
-                  <div className="mb-3 flex items-center gap-2 text-sm text-gray-500">
+                  <div className="mb-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <CalendarDays
                       size={16}
                       className="text-[#14A06F]"
@@ -137,15 +137,15 @@ export default function UpcomingEventsPage() {
                     <span>{formatDate(event.eventDate)}</span>
                   </div>
 
-                  <h3 className="mb-2 text-xl font-bold text-gray-900">
+                  <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
                     {event.title}
                   </h3>
 
-                  <p className="mb-4 text-sm leading-6 text-gray-500">
+                  <p className="mb-4 text-sm leading-6 text-gray-500 dark:text-gray-400">
                     {event.description}
                   </p>
 
-                  <div className="mb-5 flex items-center gap-2 text-sm text-gray-500">
+                  <div className="mb-5 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <MapPin
                       size={16}
                       className="shrink-0 text-[#F0562F]"

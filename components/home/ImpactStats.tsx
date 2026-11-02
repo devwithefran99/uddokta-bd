@@ -56,12 +56,12 @@ const ImpactStats = () => {
             Our Community Impact
           </span>
 
-          <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl md:text-5xl">
+          <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl md:text-5xl">
             Together, We Make
             <span className="text-[#14A06F]"> A Difference</span>
           </h2>
 
-          <p className="mt-4 text-sm leading-7 text-gray-500 sm:text-base">
+          <p className="mt-4 text-sm leading-7 text-gray-500 dark:text-gray-400 sm:text-base">
             Every small contribution creates a bigger change.
             See how our community is working together to build
             a better tomorrow.
@@ -76,7 +76,7 @@ const ImpactStats = () => {
             return (
               <div
                 key={stat.id}
-                className="group rounded-2xl border border-gray-100 bg-white p-5 text-center shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-7"
+                className="group rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 text-center shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-7"
               >
                 {/* Icon */}
                 <div
@@ -98,12 +98,12 @@ const ImpactStats = () => {
                 </h3>
 
                 {/* Title */}
-                <h4 className="mt-2 text-sm font-bold text-gray-800 sm:text-base">
+                <h4 className="mt-2 text-sm font-bold text-gray-800 dark:text-gray-100 sm:text-base">
                   {stat.title}
                 </h4>
 
                 {/* Description */}
-                <p className="mt-2 text-xs leading-5 text-gray-500 sm:text-sm">
+                <p className="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400 sm:text-sm">
                   {stat.description}
                 </p>
               </div>
@@ -112,8 +112,8 @@ const ImpactStats = () => {
         </div>
 
         {/* Bottom Message */}
-        <div className="mt-8 rounded-2xl bg-gradient-to-r from-[#14A06F]/10 via-white to-[#F0562F]/10 px-5 py-5 text-center">
-          <p className="text-sm font-semibold text-gray-700 sm:text-base">
+        <div className="mt-8 rounded-2xl bg-gradient-to-r from-[#14A06F]/10 via-white to-[#F0562F]/10 px-5 py-5 text-center dark:via-gray-900">
+          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 sm:text-base">
             Be part of the change.{" "}
             <span className="text-[#14A06F]">
               Your contribution matters!

@@ -46,7 +46,7 @@ const RecentEvents = () => {
   }, []);
 
   return (
-    <section className="bg-gray-50 px-4 py-16 md:px-8 lg:px-12 lg:py-20">
+    <section className="bg-gray-50 dark:bg-gray-950 px-4 py-16 md:px-8 lg:px-12 lg:py-20">
       <div className="mx-auto max-w-7xl">
 
         {/* Section Heading */}
@@ -56,12 +56,12 @@ const RecentEvents = () => {
               Make A Difference
             </span>
 
-            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl md:text-5xl">
+            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl md:text-5xl">
               Upcoming
               <span className="text-[#14A06F]"> Events</span>
             </h2>
 
-            <p className="mt-4 text-sm leading-7 text-gray-500 sm:text-base">
+            <p className="mt-4 text-sm leading-7 text-gray-500 dark:text-gray-400 sm:text-base">
               Discover meaningful events happening around
               your community and become a part of positive change.
             </p>
@@ -78,11 +78,11 @@ const RecentEvents = () => {
 
         {/* Event Cards */}
         {loading ? (
-          <p className="py-10 text-center text-gray-500">
+          <p className="py-10 text-center text-gray-500 dark:text-gray-400">
             Loading events...
           </p>
         ) : events.length === 0 ? (
-          <p className="py-10 text-center text-gray-500">
+          <p className="py-10 text-center text-gray-500 dark:text-gray-400">
             No upcoming events found.
           </p>
         ) : (
@@ -90,7 +90,7 @@ const RecentEvents = () => {
             {events.slice(0, 6).map((event) => (
               <div
                 key={event._id}
-                className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+                className="group overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
                 {/* Event Image */}
                 <div className="relative h-56 overflow-hidden">
@@ -111,18 +111,18 @@ const RecentEvents = () => {
                 {/* Card Content */}
                 <div className="flex flex-col p-5">
 
-                  <h3 className="min-h-[52px] text-lg font-bold leading-7 text-gray-900 transition group-hover:text-[#14A06F]">
+                  <h3 className="min-h-[52px] text-lg font-bold leading-7 text-gray-900 dark:text-white transition group-hover:text-[#14A06F]">
                     {event.title}
                   </h3>
 
                   {/* Location */}
-                  <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
+                  <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <MapPin size={17} className="shrink-0 text-[#F0562F]" />
                     <span>{event.location}</span>
                   </div>
 
                   {/* Date */}
-                  <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
+                  <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <CalendarDays
                       size={17}
                       className="shrink-0 text-[#14A06F]"

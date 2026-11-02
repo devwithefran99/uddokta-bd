@@ -4,6 +4,7 @@ import { useState, useEffect, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CalendarDays, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +26,8 @@ type Event = {
 };
 
 export default function ManageEventsPage() {
+
+  const { data: session } = authClient.useSession();
   const [myEvents, setMyEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,7 +36,7 @@ export default function ManageEventsPage() {
   useEffect(() => {
     async function getEvents() {
       try {
-        const response = await fetch("http://localhost:5000/events");
+        const response = await fetch(  `http://localhost:5000/my-events?email=${session?.user?.email}`);
         const data = await response.json();
         setMyEvents(data);
       } catch (error) {
@@ -45,7 +48,7 @@ export default function ManageEventsPage() {
     }
 
     getEvents();
-  }, []);
+  }, [session]);
 
   const handleUpdateEvent = async (event: FormEvent<HTMLFormElement>) => {
   event.preventDefault();
@@ -112,7 +115,7 @@ const handleDeleteEvent = async (id: string) => {
 };
 
   return (
-    <main className="min-h-screen bg-gray-50 py-12">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
@@ -120,10 +123,10 @@ const handleDeleteEvent = async (id: string) => {
             <p className="mb-2 text-sm font-semibold text-[#14A06F]">
               MY DASHBOARD
             </p>
-            <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
               Manage Events
             </h1>
-            <p className="mt-3 text-gray-500">
+            <p className="mt-3 text-gray-500 dark:text-gray-400">
               Manage, update and organize the events you have created.
             </p>
           </div>
@@ -138,8 +141,8 @@ const handleDeleteEvent = async (id: string) => {
         </div>
 
         {/* Total Events */}
-        <div className="mb-8 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-          <p className="text-sm font-medium text-gray-500">
+        <div className="mb-8 rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
             Total Events Created
           </p>
           <h2 className="mt-2 text-3xl font-bold text-[#14A06F]">
@@ -149,13 +152,13 @@ const handleDeleteEvent = async (id: string) => {
 
         {/* Events */}
         {loading ? (
-          <p className="py-10 text-center text-gray-500">Loading events...</p>
+          <p className="py-10 text-center text-gray-500 dark:text-gray-400">Loading events...</p>
         ) : myEvents.length === 0 ? (
-          <div className="rounded-xl bg-white py-16 text-center">
-            <h2 className="text-xl font-semibold text-gray-800">
+          <div className="rounded-xl bg-white dark:bg-gray-900 py-16 text-center">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
               No Events Found
             </h2>
-            <p className="mt-2 text-gray-500">
+            <p className="mt-2 text-gray-500 dark:text-gray-400">
               You haven&apos;t created any events yet.
             </p>
             <Link
@@ -170,7 +173,7 @@ const handleDeleteEvent = async (id: string) => {
             {myEvents.map((event) => (
               <div
                 key={event._id}
-                className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md"
+                className="overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm transition hover:shadow-md"
               >
                 <div className="relative h-52 w-full">
                   <Image
@@ -182,15 +185,15 @@ const handleDeleteEvent = async (id: string) => {
                 </div>
 
                 <div className="p-5">
-                  <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-[#14A06F]">
+                  <span className="rounded-full bg-green-50 dark:bg-green-950/40 px-3 py-1 text-xs font-semibold text-[#14A06F]">
                     {event.eventType}
                   </span>
 
-                  <h2 className="mt-4 text-xl font-bold text-gray-900">
+                  <h2 className="mt-4 text-xl font-bold text-gray-900 dark:text-white">
                     {event.title}
                   </h2>
 
-                  <div className="mt-4 space-y-3 text-sm text-gray-500">
+                  <div className="mt-4 space-y-3 text-sm text-gray-500 dark:text-gray-400">
                     <p className="flex items-center gap-2">
                       <CalendarDays size={17} className="text-[#14A06F]" />
                       {new Date(event.eventDate).toLocaleDateString()}
@@ -201,10 +204,10 @@ const handleDeleteEvent = async (id: string) => {
                     </p>
                   </div>
 
-                  <div className="mt-6 flex gap-3 border-t border-gray-100 pt-4">
+                  <div className="mt-6 flex gap-3 border-t border-gray-100 dark:border-gray-800 pt-4">
                     <button
                       onClick={() => setSelectedEvent(event)}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-[#14A06F] py-2.5 text-sm font-semibold text-[#14A06F] hover:bg-green-50"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-[#14A06F] py-2.5 text-sm font-semibold text-[#14A06F] hover:bg-green-50 dark:hover:bg-gray-800"
                     >
                       <Pencil size={16} />
                       Edit
@@ -212,7 +215,7 @@ const handleDeleteEvent = async (id: string) => {
 
                    <button
   onClick={() => handleDeleteEvent(event._id)}
-  className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-red-200 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-50"
+  className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-red-200 dark:border-red-900 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40"
 >
   <Trash2 size={16} />
   Delete
@@ -252,7 +255,7 @@ const handleDeleteEvent = async (id: string) => {
                   <textarea
                     name="description"
                     defaultValue={selectedEvent.description}
-                    className="w-full rounded-md border border-gray-200 p-3 text-sm"
+                    className="w-full rounded-md border border-gray-200 dark:border-gray-700 p-3 text-sm"
                     rows={3}
                   />
                 </div>

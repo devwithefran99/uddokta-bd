@@ -71,7 +71,7 @@ export default function EventDetailsPage() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-gray-500">Loading event details...</p>
+        <p className="text-gray-500 dark:text-gray-400">Loading event details...</p>
       </div>
     );
   }
@@ -79,7 +79,7 @@ export default function EventDetailsPage() {
   if (!event) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <h2 className="text-2xl font-bold text-gray-800">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
           Event Not Found
         </h2>
         <Link
@@ -93,13 +93,13 @@ export default function EventDetailsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F9FAFB] px-4 py-10">
+    <main className="min-h-screen bg-[#F9FAFB] dark:bg-gray-950 px-4 py-10">
       <div className="mx-auto max-w-6xl">
 
         {/* Back Button */}
         <Link
           href="/upcoming-events"
-          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-[#14A06F]"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-[#14A06F]"
         >
           <ArrowLeft size={18} />
           Back to Upcoming Events
@@ -123,78 +123,78 @@ export default function EventDetailsPage() {
           <div className="space-y-6 lg:col-span-2">
 
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-2 text-sm font-semibold text-[#14A06F]">
+              <span className="inline-flex items-center gap-2 rounded-full bg-green-100 dark:bg-green-900/40 px-4 py-2 text-sm font-semibold text-[#14A06F]">
                 <Tag size={15} />
                 {event.eventType}
               </span>
 
-              <h1 className="mt-5 text-3xl font-bold text-[#1F2937] sm:text-4xl">
+              <h1 className="mt-5 text-3xl font-bold text-[#1F2937] dark:text-white sm:text-4xl">
                 {event.title}
               </h1>
             </div>
 
             {/* Description */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-xl font-bold text-gray-800">
+            <div className="rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-sm">
+              <h2 className="mb-4 text-xl font-bold text-gray-800 dark:text-gray-100">
                 About This Event
               </h2>
 
-              <p className="whitespace-pre-line leading-8 text-gray-600">
+              <p className="whitespace-pre-line leading-8 text-gray-600 dark:text-gray-400">
                 {event.description}
               </p>
             </div>
 
             {/* Event Details */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <h2 className="mb-5 text-xl font-bold text-gray-800">
+            <div className="rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-sm">
+              <h2 className="mb-5 text-xl font-bold text-gray-800 dark:text-gray-100">
                 Event Information
               </h2>
 
               <div className="grid gap-6 sm:grid-cols-2">
 
                 <div className="flex items-start gap-3">
-                  <div className="rounded-lg bg-green-50 p-3 text-[#14A06F]">
+                  <div className="rounded-lg bg-green-50 dark:bg-green-950/40 p-3 text-[#14A06F]">
                     <CalendarDays size={22} />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Event Date</p>
-                    <p className="mt-1 font-semibold text-gray-800">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Event Date</p>
+                    <p className="mt-1 font-semibold text-gray-800 dark:text-gray-100">
                       {formatDate(event.eventDate)}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <div className="rounded-lg bg-orange-50 p-3 text-[#F0562F]">
+                  <div className="rounded-lg bg-orange-50 dark:bg-orange-950/40 p-3 text-[#F0562F]">
                     <Clock size={22} />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Event Time</p>
-                    <p className="mt-1 font-semibold text-gray-800">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Event Time</p>
+                    <p className="mt-1 font-semibold text-gray-800 dark:text-gray-100">
                       {formatTime(event.eventDate)}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3 sm:col-span-2">
-                  <div className="rounded-lg bg-green-50 p-3 text-[#14A06F]">
+                  <div className="rounded-lg bg-green-50 dark:bg-green-950/40 p-3 text-[#14A06F]">
                     <MapPin size={22} />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Event Location</p>
-                    <p className="mt-1 font-semibold text-gray-800">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Event Location</p>
+                    <p className="mt-1 font-semibold text-gray-800 dark:text-gray-100">
                       {event.location}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3 sm:col-span-2">
-                  <div className="rounded-lg bg-orange-50 p-3 text-[#F0562F]">
+                  <div className="rounded-lg bg-orange-50 dark:bg-orange-950/40 p-3 text-[#F0562F]">
                     <Users size={22} />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Event ID</p>
-                    <p className="mt-1 break-all font-semibold text-gray-800">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Event ID</p>
+                    <p className="mt-1 break-all font-semibold text-gray-800 dark:text-gray-100">
                       {event._id}
                     </p>
                   </div>
@@ -206,12 +206,12 @@ export default function EventDetailsPage() {
 
           {/* Join Event Card */}
           <div>
-            <div className="sticky top-24 rounded-2xl bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-gray-800">
+            <div className="sticky top-24 rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
                 Interested in Joining?
               </h2>
 
-              <p className="mt-3 text-sm leading-6 text-gray-500">
+              <p className="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">
                 Be part of this event and connect with people who share
                 your interests.
               </p>
@@ -246,7 +246,7 @@ export default function EventDetailsPage() {
   Join Event
 </button>
 
-              <p className="mt-4 text-center text-xs text-gray-400">
+              <p className="mt-4 text-center text-xs text-gray-400 dark:text-gray-500">
                 Join functionality will be added next.
               </p>
             </div>

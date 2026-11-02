@@ -50,7 +50,7 @@ const galleryImages = [
 
 export default function GallerySection() {
   return (
-    <section className="bg-white py-16 md:py-20">
+    <section className="bg-white py-16 md:py-20 dark:bg-gray-950">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Heading */}
         <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
@@ -59,11 +59,11 @@ export default function GallerySection() {
               Our Memories
             </span>
 
-            <h2 className="text-3xl font-bold text-gray-900 md:text-4xl">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
               Moments That <span className="text-[#14A06F]">Matter</span>
             </h2>
 
-            <p className="mt-3 max-w-xl text-gray-500">
+            <p className="mt-3 max-w-xl text-gray-500 dark:text-gray-400">
               Explore the moments, people, and stories that make our community
               stronger and more meaningful.
             </p>
@@ -83,7 +83,7 @@ export default function GallerySection() {
           {galleryImages.map((item) => (
             <div
               key={item.id}
-              className="group relative h-64 overflow-hidden rounded-2xl bg-gray-100 sm:h-72"
+              className="group relative h-64 overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800 sm:h-72"
             >
               <Image
                 src={item.image}
