@@ -4,11 +4,18 @@
 import Link from "next/link";
 import { User, Mail, Lock, ArrowRight } from "lucide-react";
 import { type FormEvent } from "react";
-import { authClient } from "@/lib/auth-client";
+import { authClient, signIn } from "@/lib/auth-client";
 import { toast } from "react-toastify";
 import { redirect } from "next/navigation";
 
 export default function SignUpPage() {
+
+  const handlegoogleSignUp = async () => {
+    const resData = await signIn.social({
+      provider: "google",
+    })
+    console.log("Google sign-in response:", resData);
+  }
 
   const handleSignUp = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -48,6 +55,7 @@ export default function SignUpPage() {
 
         <button
           type="button"
+          onClick={handlegoogleSignUp}
           className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 font-medium text-gray-700 dark:text-gray-300 transition hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           <span className="text-xl font-bold text-[#4285F4]">G</span>
