@@ -1,12 +1,21 @@
 "use client";
 import Link from "next/link";
 import { Mail, Lock, ArrowRight } from "lucide-react";
-import { FormEvent } from "react";
+import { type FormEvent, useState } from "react";
 import { toast } from "react-toastify";
 import { authClient, signIn } from "@/lib/auth-client";
 import { redirect } from "next/navigation";
 
+type SignInErrors = {
+  email?: string;
+  password?: string;
+};
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function SignInPage() {
+  const [errors, setErrors] = useState<SignInErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleGoogleSignIn = async () => {
     const resData = await signIn.social({
@@ -15,26 +24,59 @@ export default function SignInPage() {
     console.log("Google sign-in response:", resData);
   }
 
+  const validate = (user: { email: string; password: string }): SignInErrors => {
+    const nextErrors: SignInErrors = {};
+
+    if (!user.email) {
+      nextErrors.email = "Email is required.";
+    } else if (!emailPattern.test(user.email)) {
+      nextErrors.email = "Please enter a valid email address.";
+    }
+
+    if (!user.password) {
+      nextErrors.password = "Password is required.";
+    }
+
+    return nextErrors;
+  };
+
+  const clearError = (field: keyof SignInErrors) => {
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
   const handleSignIn = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const user = Object.fromEntries(formData.entries()) as {
-      email: string; 
-      password: string;
+    const user = {
+      email: String(formData.get("email") ?? "").trim(),
+      password: String(formData.get("password") ?? ""),
     };
-    // console.log("User data:", user);
-    const { data, error } = await authClient.signIn.email({
-      ...user,
-    });
 
-    if(data) {
-      // console.log("User signed in successfully:", data);
-      toast.success("Signed in successfully!");
-      redirect ("/")
+    const nextErrors = validate(user);
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      toast.error("Please fix the highlighted fields.");
+      return;
     }
-    if (error) {
-      // console.error("Error signing in:", error);
-      toast.error(error.message || "An error occurred during sign in.");
+
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await authClient.signIn.email({
+        ...user,
+      });
+
+      if (data) {
+        // console.log("User signed in successfully:", data);
+        toast.success("Signed in successfully!");
+        redirect ("/")
+      }
+      if (error) {
+        // console.error("Error signing in:", error);
+        toast.error(error.message || "An error occurred during sign in.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -68,7 +110,7 @@ export default function SignInPage() {
         </div>
 
         {/* Sign In Form */}
-        <form className="space-y-5" onSubmit={handleSignIn}>
+        <form className="space-y-5" onSubmit={handleSignIn} noValidate>
           <div>
             <label
               htmlFor="email"
@@ -86,9 +128,23 @@ export default function SignInPage() {
                 type="email"
                   name="email"
                 placeholder="Enter your email"
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#14A06F] focus:ring-2 focus:ring-[#14A06F]/10"
+                required
+                autoComplete="email"
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby={errors.email ? "email-error" : undefined}
+                onChange={() => clearError("email")}
+                className={`w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition focus:ring-2 ${
+                  errors.email
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                    : "border-gray-200 dark:border-gray-700 focus:border-[#14A06F] focus:ring-[#14A06F]/10"
+                }`}
               />
             </div>
+            {errors.email && (
+              <p id="email-error" className="mt-1.5 text-xs text-red-500">
+                {errors.email}
+              </p>
+            )}
           </div>
 
           <div>
@@ -108,16 +164,31 @@ export default function SignInPage() {
                 type="password"
                   name="password"
                 placeholder="Enter your password"
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#14A06F] focus:ring-2 focus:ring-[#14A06F]/10"
+                required
+                autoComplete="current-password"
+                aria-invalid={Boolean(errors.password)}
+                aria-describedby={errors.password ? "password-error" : undefined}
+                onChange={() => clearError("password")}
+                className={`w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition focus:ring-2 ${
+                  errors.password
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                    : "border-gray-200 dark:border-gray-700 focus:border-[#14A06F] focus:ring-[#14A06F]/10"
+                }`}
               />
             </div>
+            {errors.password && (
+              <p id="password-error" className="mt-1.5 text-xs text-red-500">
+                {errors.password}
+              </p>
+            )}
           </div>
 
           <button
             type="submit"
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#14A06F] py-3 font-semibold text-white transition hover:bg-[#10875E]"
+            disabled={isSubmitting}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#14A06F] py-3 font-semibold text-white transition hover:bg-[#10875E] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Sign In
+            {isSubmitting ? "Signing in..." : "Sign In"}
             <ArrowRight size={18} />
           </button>
         </form>

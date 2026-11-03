@@ -3,12 +3,23 @@
 
 import Link from "next/link";
 import { User, Mail, Lock, ArrowRight } from "lucide-react";
-import { type FormEvent } from "react";
+import { type FormEvent, useState } from "react";
 import { authClient, signIn } from "@/lib/auth-client";
 import { toast } from "react-toastify";
 import { redirect } from "next/navigation";
 
+type SignUpErrors = {
+  name?: string;
+  email?: string;
+  password?: string;
+};
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 8;
+
 export default function SignUpPage() {
+  const [errors, setErrors] = useState<SignUpErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handlegoogleSignUp = async () => {
     const resData = await signIn.social({
@@ -17,27 +28,71 @@ export default function SignUpPage() {
     console.log("Google sign-in response:", resData);
   }
 
+  const validate = (user: {
+    name: string;
+    email: string;
+    password: string;
+  }): SignUpErrors => {
+    const nextErrors: SignUpErrors = {};
+
+    if (!user.name) {
+      nextErrors.name = "Full name is required.";
+    } else if (user.name.length < 2) {
+      nextErrors.name = "Name must be at least 2 characters.";
+    }
+
+    if (!user.email) {
+      nextErrors.email = "Email is required.";
+    } else if (!emailPattern.test(user.email)) {
+      nextErrors.email = "Please enter a valid email address.";
+    }
+
+    if (!user.password) {
+      nextErrors.password = "Password is required.";
+    } else if (user.password.length < MIN_PASSWORD_LENGTH) {
+      nextErrors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
+    }
+
+    return nextErrors;
+  };
+
+  const clearError = (field: keyof SignUpErrors) => {
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
   const handleSignUp = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const user = Object.fromEntries(formData.entries()) as {
-      name: string;
-      email: string;
-      password: string;
+    const user = {
+      name: String(formData.get("name") ?? "").trim(),
+      email: String(formData.get("email") ?? "").trim(),
+      password: String(formData.get("password") ?? ""),
     };
 
-    // console.log("User data:", user);
-    const {data , error} = await authClient.signUp.email({
-      ...user,
-    })
-    if (error) {
-      // console.error("Error signing up:", error);
-      toast.error(error.message || "An error occurred during sign up.");
-    } else {
-      // console.log("User signed up successfully:", data);
-      toast.success("Account created successfully!");
-      redirect ("/")
+    const nextErrors = validate(user);
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      toast.error("Please fix the highlighted fields.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const {data , error} = await authClient.signUp.email({
+        ...user,
+      })
+      if (error) {
+        // console.error("Error signing up:", error);
+        toast.error(error.message || "An error occurred during sign up.");
+      } else {
+        // console.log("User signed up successfully:", data);
+        toast.success("Account created successfully!");
+        redirect ("/")
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
   return (
@@ -68,7 +123,7 @@ export default function SignUpPage() {
           <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
         </div>
 
-        <form className="space-y-4" onSubmit={handleSignUp}>
+        <form className="space-y-4" onSubmit={handleSignUp} noValidate>
 
           <div>
             <label htmlFor="name" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -82,9 +137,22 @@ export default function SignUpPage() {
                 type="text"
                 placeholder="Enter your full name"
                 required
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#14A06F] focus:ring-2 focus:ring-[#14A06F]/10"
+                autoComplete="name"
+                aria-invalid={Boolean(errors.name)}
+                aria-describedby={errors.name ? "name-error" : undefined}
+                onChange={() => clearError("name")}
+                className={`w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition focus:ring-2 ${
+                  errors.name
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                    : "border-gray-200 dark:border-gray-700 focus:border-[#14A06F] focus:ring-[#14A06F]/10"
+                }`}
               />
             </div>
+            {errors.name && (
+              <p id="name-error" className="mt-1.5 text-xs text-red-500">
+                {errors.name}
+              </p>
+            )}
           </div>
 
           <div>
@@ -99,9 +167,22 @@ export default function SignUpPage() {
                 type="email"
                 placeholder="Enter your email"
                 required
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#14A06F] focus:ring-2 focus:ring-[#14A06F]/10"
+                autoComplete="email"
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby={errors.email ? "email-error" : undefined}
+                onChange={() => clearError("email")}
+                className={`w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition focus:ring-2 ${
+                  errors.email
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                    : "border-gray-200 dark:border-gray-700 focus:border-[#14A06F] focus:ring-[#14A06F]/10"
+                }`}
               />
             </div>
+            {errors.email && (
+              <p id="email-error" className="mt-1.5 text-xs text-red-500">
+                {errors.email}
+              </p>
+            )}
           </div>
 
           <div>
@@ -116,16 +197,34 @@ export default function SignUpPage() {
                 type="password"
                 placeholder="Create a password"
                 required
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#14A06F] focus:ring-2 focus:ring-[#14A06F]/10"
+                autoComplete="new-password"
+                aria-invalid={Boolean(errors.password)}
+                aria-describedby={errors.password ? "password-error" : "password-hint"}
+                onChange={() => clearError("password")}
+                className={`w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition focus:ring-2 ${
+                  errors.password
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                    : "border-gray-200 dark:border-gray-700 focus:border-[#14A06F] focus:ring-[#14A06F]/10"
+                }`}
               />
             </div>
+            {errors.password ? (
+              <p id="password-error" className="mt-1.5 text-xs text-red-500">
+                {errors.password}
+              </p>
+            ) : (
+              <p id="password-hint" className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
+                Use at least {MIN_PASSWORD_LENGTH} characters.
+              </p>
+            )}
           </div>
 
           <button
             type="submit"
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#14A06F] py-3 font-semibold text-white transition hover:bg-[#10875E]"
+            disabled={isSubmitting}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#14A06F] py-3 font-semibold text-white transition hover:bg-[#10875E] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Create Account
+            {isSubmitting ? "Creating account..." : "Create Account"}
             <ArrowRight size={18} />
           </button>
 

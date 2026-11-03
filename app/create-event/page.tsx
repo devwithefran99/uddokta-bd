@@ -16,6 +16,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+type EventErrors = {
+  title?: string;
+  description?: string;
+  eventType?: string;
+  thumbnail?: string;
+  location?: string;
+  eventDate?: string;
+};
+
+const isValidUrl = (value: string) => {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
 export default function CreateEventPage() {
   const { data: session } = authClient.useSession();
   const [eventDate, setEventDate] = useState("");
@@ -25,6 +43,54 @@ export default function CreateEventPage() {
 
   const [eventType, setEventType] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<EventErrors>({});
+
+  const validate = (eventData: {
+    title: string;
+    description: string;
+    eventType: string;
+    thumbnail: string;
+    location: string;
+    eventDate: string;
+  }): EventErrors => {
+    const nextErrors: EventErrors = {};
+
+    if (!eventData.title) {
+      nextErrors.title = "Event title is required.";
+    } else if (eventData.title.length < 3) {
+      nextErrors.title = "Title must be at least 3 characters.";
+    }
+
+    if (!eventData.description) {
+      nextErrors.description = "Event description is required.";
+    } else if (eventData.description.length < 10) {
+      nextErrors.description = "Description must be at least 10 characters.";
+    }
+
+    if (!eventData.eventType) {
+      nextErrors.eventType = "Please select an event type.";
+    }
+
+    if (eventData.thumbnail && !isValidUrl(eventData.thumbnail)) {
+      nextErrors.thumbnail = "Please enter a valid http(s) image URL.";
+    }
+
+    if (!eventData.location) {
+      nextErrors.location = "Event location is required.";
+    }
+
+    if (!eventData.eventDate) {
+      nextErrors.eventDate = "Event date is required.";
+    } else if (eventData.eventDate < today) {
+      nextErrors.eventDate = "Event date cannot be in the past.";
+    }
+
+    return nextErrors;
+  };
+
+  const clearError = (field: keyof EventErrors) => {
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
 
   const handleCreateEvent = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -33,16 +99,18 @@ export default function CreateEventPage() {
     const formData = new FormData(form);
 
     const eventData = {
-      title: formData.get("title"),
-      description: formData.get("description"),
+      title: String(formData.get("title") ?? "").trim(),
+      description: String(formData.get("description") ?? "").trim(),
       eventType: eventType,
-      thumbnail: formData.get("thumbnail"),
-      location: formData.get("location"),
+      thumbnail: String(formData.get("thumbnail") ?? "").trim(),
+      location: String(formData.get("location") ?? "").trim(),
       eventDate: eventDate,
     };
 
-    if (!eventType) {
-      alert("Please select an event type!");
+    const nextErrors = validate(eventData);
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
@@ -74,6 +142,7 @@ export default function CreateEventPage() {
         form.reset();
         setEventDate("");
         setEventType("");
+        setErrors({});
       } else {
         alert(result.message);
       }
@@ -106,7 +175,7 @@ export default function CreateEventPage() {
 
         {/* Event Form */}
         <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm sm:p-8">
-          <form onSubmit={handleCreateEvent} className="space-y-6">
+          <form onSubmit={handleCreateEvent} className="space-y-6" noValidate>
 
             {/* Event Title */}
             <div className="space-y-2">
@@ -115,8 +184,16 @@ export default function CreateEventPage() {
                 id="title"
                 name="title"
                 placeholder="Enter your event title"
+                aria-invalid={Boolean(errors.title)}
+                aria-describedby={errors.title ? "title-error" : undefined}
+                onChange={() => clearError("title")}
                 className="h-12"
               />
+              {errors.title && (
+                <p id="title-error" className="text-xs text-red-500">
+                  {errors.title}
+                </p>
+              )}
             </div>
 
             {/* Event Description */}
@@ -127,16 +204,35 @@ export default function CreateEventPage() {
                 name="description"
                 placeholder="Describe your event and its purpose..."
                 rows={5}
+                aria-invalid={Boolean(errors.description)}
+                aria-describedby={errors.description ? "description-error" : undefined}
+                onChange={() => clearError("description")}
                 className="resize-none"
               />
+              {errors.description && (
+                <p id="description-error" className="text-xs text-red-500">
+                  {errors.description}
+                </p>
+              )}
             </div>
 
             {/* Event Type */}
             <div className="space-y-2">
               <Label htmlFor="eventType">Event Type</Label>
 
-              <Select value={eventType} onValueChange={setEventType}>
-                <SelectTrigger id="eventType" className="h-12 w-full">
+              <Select
+                value={eventType}
+                onValueChange={(value) => {
+                  setEventType(value ?? "");
+                  clearError("eventType");
+                }}
+              >
+                <SelectTrigger
+                  id="eventType"
+                  className="h-12 w-full"
+                  aria-invalid={Boolean(errors.eventType)}
+                  aria-describedby={errors.eventType ? "eventType-error" : undefined}
+                >
                   <SelectValue placeholder="Select event type" />
                 </SelectTrigger>
 
@@ -152,6 +248,11 @@ export default function CreateEventPage() {
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.eventType && (
+                <p id="eventType-error" className="text-xs text-red-500">
+                  {errors.eventType}
+                </p>
+              )}
             </div>
 
             {/* Thumbnail Image URL */}
@@ -169,13 +270,22 @@ export default function CreateEventPage() {
                   name="thumbnail"
                   type="url"
                   placeholder="https://example.com/image.jpg"
+                  aria-invalid={Boolean(errors.thumbnail)}
+                  aria-describedby={errors.thumbnail ? "thumbnail-error" : undefined}
+                  onChange={() => clearError("thumbnail")}
                   className="h-12 pl-10"
                 />
               </div>
 
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                Provide a valid image URL for your event.
-              </p>
+              {errors.thumbnail ? (
+                <p id="thumbnail-error" className="text-xs text-red-500">
+                  {errors.thumbnail}
+                </p>
+              ) : (
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  Provide a valid image URL for your event.
+                </p>
+              )}
             </div>
 
             {/* Location */}
@@ -192,9 +302,17 @@ export default function CreateEventPage() {
                   id="location"
                   name="location"
                   placeholder="Enter event location"
+                  aria-invalid={Boolean(errors.location)}
+                  aria-describedby={errors.location ? "location-error" : undefined}
+                  onChange={() => clearError("location")}
                   className="h-12 pl-10"
                 />
               </div>
+              {errors.location && (
+                <p id="location-error" className="text-xs text-red-500">
+                  {errors.location}
+                </p>
+              )}
             </div>
 
             {/* Event Date */}
@@ -213,14 +331,25 @@ export default function CreateEventPage() {
                   type="date"
                   min={today}
                   value={eventDate}
-                  onChange={(e) => setEventDate(e.target.value)}
+                  aria-invalid={Boolean(errors.eventDate)}
+                  aria-describedby={errors.eventDate ? "eventDate-error" : undefined}
+                  onChange={(e) => {
+                    setEventDate(e.target.value);
+                    clearError("eventDate");
+                  }}
                   className="h-12 pl-10"
                 />
               </div>
 
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                Select a future date for your event.
-              </p>
+              {errors.eventDate ? (
+                <p id="eventDate-error" className="text-xs text-red-500">
+                  {errors.eventDate}
+                </p>
+              ) : (
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  Select a future date for your event.
+                </p>
+              )}
             </div>
 
             {/* Submit Button */}
