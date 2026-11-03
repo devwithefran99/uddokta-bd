@@ -3,10 +3,17 @@ import Link from "next/link";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 import { FormEvent } from "react";
 import { toast } from "react-toastify";
-import { authClient } from "@/lib/auth-client";
+import { authClient, signIn } from "@/lib/auth-client";
 import { redirect } from "next/navigation";
 
 export default function SignInPage() {
+
+  const handleGoogleSignIn = async () => {
+    const resData = await signIn.social({
+      provider: "google",
+    })
+    console.log("Google sign-in response:", resData);
+  }
 
   const handleSignIn = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -47,6 +54,7 @@ export default function SignInPage() {
         {/* Google Sign In */}
         <button
           type="button"
+          onClick={handleGoogleSignIn}
           className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 font-medium text-gray-700 dark:text-gray-300 transition hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           <span className="text-xl font-bold text-[#4285F4]">G</span>
@@ -115,7 +123,7 @@ export default function SignInPage() {
         </form>
 
         <p className="mt-7 text-center text-sm text-gray-500 dark:text-gray-400">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             href="/register"
             className="font-semibold text-[#14A06F] hover:underline"

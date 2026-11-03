@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -42,7 +43,8 @@ function formatTime(date: string) {
 }
 
 export default function EventDetailsPage() {
-    const { data: session } = authClient.useSession();
+  const { data: session } = authClient.useSession();
+
   const params = useParams();
   const id = params.id as string;
 
@@ -52,9 +54,14 @@ export default function EventDetailsPage() {
   useEffect(() => {
     async function getEvent() {
       try {
+        // Event Details is a public API
         const response = await fetch(
           `http://localhost:5000/events/${id}`
         );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch event");
+        }
 
         const data = await response.json();
         setEvent(data);
@@ -71,7 +78,9 @@ export default function EventDetailsPage() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">Loading event details...</p>
+        <p className="text-gray-500 dark:text-gray-400">
+          Loading event details...
+        </p>
       </div>
     );
   }
@@ -82,6 +91,7 @@ export default function EventDetailsPage() {
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
           Event Not Found
         </h2>
+
         <Link
           href="/upcoming-events"
           className="rounded-lg bg-[#14A06F] px-5 py-3 text-white"
@@ -96,7 +106,6 @@ export default function EventDetailsPage() {
     <main className="min-h-screen bg-[#F9FAFB] dark:bg-gray-950 px-4 py-10">
       <div className="mx-auto max-w-6xl">
 
-        {/* Back Button */}
         <Link
           href="/upcoming-events"
           className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-[#14A06F]"
@@ -156,8 +165,12 @@ export default function EventDetailsPage() {
                   <div className="rounded-lg bg-green-50 dark:bg-green-950/40 p-3 text-[#14A06F]">
                     <CalendarDays size={22} />
                   </div>
+
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Event Date</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Event Date
+                    </p>
+
                     <p className="mt-1 font-semibold text-gray-800 dark:text-gray-100">
                       {formatDate(event.eventDate)}
                     </p>
@@ -168,8 +181,12 @@ export default function EventDetailsPage() {
                   <div className="rounded-lg bg-orange-50 dark:bg-orange-950/40 p-3 text-[#F0562F]">
                     <Clock size={22} />
                   </div>
+
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Event Time</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Event Time
+                    </p>
+
                     <p className="mt-1 font-semibold text-gray-800 dark:text-gray-100">
                       {formatTime(event.eventDate)}
                     </p>
@@ -180,8 +197,12 @@ export default function EventDetailsPage() {
                   <div className="rounded-lg bg-green-50 dark:bg-green-950/40 p-3 text-[#14A06F]">
                     <MapPin size={22} />
                   </div>
+
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Event Location</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Event Location
+                    </p>
+
                     <p className="mt-1 font-semibold text-gray-800 dark:text-gray-100">
                       {event.location}
                     </p>
@@ -192,8 +213,12 @@ export default function EventDetailsPage() {
                   <div className="rounded-lg bg-orange-50 dark:bg-orange-950/40 p-3 text-[#F0562F]">
                     <Users size={22} />
                   </div>
+
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Event ID</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Event ID
+                    </p>
+
                     <p className="mt-1 break-all font-semibold text-gray-800 dark:text-gray-100">
                       {event._id}
                     </p>
@@ -207,6 +232,7 @@ export default function EventDetailsPage() {
           {/* Join Event Card */}
           <div>
             <div className="sticky top-24 rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-sm">
+
               <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
                 Interested in Joining?
               </h2>
@@ -217,38 +243,50 @@ export default function EventDetailsPage() {
               </p>
 
               <button
-  onClick={async () => {
-    if (!session) {
-      alert("Please sign in first!");
-      return;
-    }
+                onClick={async () => {
+                  if (!session) {
+                    alert("Please sign in first!");
+                    return;
+                  }
 
-    const response = await fetch("http://localhost:5000/join-event", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        eventId: event._id,
-        eventTitle: event.title,
-        eventImage: event.thumbnail,
-        eventDate: event.eventDate,
-        location: event.location,
-        userEmail: session.user.email,
-      }),
-    });
+                  try {
+                    // Get JWT token
+                    const jwttoken = await authClient.token();
 
-    const data = await response.json();
-    alert(data.message);
-  }}
-  className="mt-6 w-full rounded-xl bg-[#14A06F] px-5 py-3 font-semibold text-white hover:bg-[#10875e]"
->
-  Join Event
-</button>
+                    const response = await fetch(
+                      "http://localhost:5000/join-event",
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          authorization: `Bearer ${jwttoken.data?.token}`,
+                        },
+                        body: JSON.stringify({
+                          eventId: event._id,
+                          eventTitle: event.title,
+                          eventImage: event.thumbnail,
+                          eventDate: event.eventDate,
+                          location: event.location,
+                          userEmail: session.user.email,
+                        }),
+                      }
+                    );
+
+                    const data = await response.json();
+                    alert(data.message);
+                  } catch (error) {
+                    console.log(error);
+                  }
+                }}
+                className="mt-6 w-full rounded-xl bg-[#14A06F] px-5 py-3 font-semibold text-white hover:bg-[#10875e]"
+              >
+                Join Event
+              </button>
 
               <p className="mt-4 text-center text-xs text-gray-400 dark:text-gray-500">
-                Join functionality will be added next.
+                Join this event and make a difference!
               </p>
+
             </div>
           </div>
 
