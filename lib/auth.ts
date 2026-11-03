@@ -21,8 +21,13 @@ export const auth = betterAuth({
     },
 
     plugins: [
-        jwt() 
-    ],
+  jwt({
+    jwt: {
+      issuer: process.env.BETTER_AUTH_URL,
+      audience: process.env.BETTER_AUTH_URL,
+    },
+  }),
+],
     session: {
       cookieCache: {
         enabled: true,

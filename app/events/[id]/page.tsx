@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState, use } from "react";
+
 import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   CalendarDays,
@@ -42,55 +42,165 @@ function formatTime(date: string) {
   });
 }
 
-export default function EventDetailsPage() {
-  const { data: session } = authClient.useSession();
+function EventDetailsLoading() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <p className="text-gray-500 dark:text-gray-400">
+        Loading event details...
+      </p>
+    </div>
+  );
+}
 
-  const params = useParams();
-  const id = params.id as string;
+export default function EventDetailsPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  // `params` is a runtime API. Under Cache Components it must be read inside a
+  // Suspense boundary, otherwise the route can't prerender its static shell.
+  return (
+    <Suspense fallback={<EventDetailsLoading />}>
+      <EventDetails params={params} />
+    </Suspense>
+  );
+}
+
+function EventDetails({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { data: session, isPending: sessionPending } = authClient.useSession();
+
+  const { id } = use(params);
 
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [notFound, setNotFound] = useState(false);
+  const [joining, setJoining] = useState(false);
+  const [joinMessage, setJoinMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function getEvent() {
+      setLoading(true);
+      setError("");
+      setNotFound(false);
+
       try {
-        // Event Details is a public API
-        const response = await fetch(
-          `http://localhost:5000/events/${id}`
-        );
+        // Event details is a public API - no token needed here.
+        const response = await fetch(`http://localhost:5000/events/${id}`, {
+          cache: "no-store",
+        });
+
+        const data = await response.json().catch(() => null);
 
         if (!response.ok) {
-          throw new Error("Failed to fetch event");
+          if (response.status === 404) {
+            if (!cancelled) setNotFound(true);
+            throw new Error(data?.message || "This event does not exist.");
+          }
+
+          throw new Error(data?.message || "Failed to fetch event details.");
         }
 
-        const data = await response.json();
-        setEvent(data);
-      } catch (error) {
-        console.log(error);
+        if (!cancelled) setEvent(data);
+      } catch (err) {
+        if (!cancelled) {
+          console.log(err);
+          setError(
+            err instanceof Error ? err.message : "Failed to fetch event details."
+          );
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
     getEvent();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
+  const handleJoin = async () => {
+    if (!event) return;
+
+    if (!session) {
+      setJoinMessage({
+        type: "error",
+        text: "Please sign in before joining an event.",
+      });
+      return;
+    }
+
+    setJoining(true);
+    setJoinMessage(null);
+
+    try {
+      const { data: tokenData, error: tokenError } = await authClient.token();
+
+      if (tokenError || !tokenData?.token) {
+        setJoinMessage({
+          type: "error",
+          text: "Could not get your session token. Please sign in again.",
+        });
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/join-event", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${tokenData.token}`,
+        },
+        body: JSON.stringify({ eventId: event._id }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setJoinMessage({
+          type: "error",
+          text: data.message || "Failed to join this event.",
+        });
+        return;
+      }
+
+      setJoinMessage({ type: "success", text: data.message });
+    } catch (err) {
+      console.log(err);
+      setJoinMessage({
+        type: "error",
+        text: "Failed to join this event. Please try again.",
+      });
+    } finally {
+      setJoining(false);
+    }
+  };
+
   if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">
-          Loading event details...
-        </p>
-      </div>
-    );
+    return <EventDetailsLoading />;
   }
 
   if (!event) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-          Event Not Found
+          {notFound ? "Event Not Found" : "Could Not Load Event"}
         </h2>
+
+        <p className="max-w-md text-gray-500 dark:text-gray-400">
+          {error ||
+            "The event may have been deleted, or the API server is not reachable."}
+        </p>
 
         <Link
           href="/upcoming-events"
@@ -243,45 +353,33 @@ export default function EventDetailsPage() {
               </p>
 
               <button
-                onClick={async () => {
-                  if (!session) {
-                    alert("Please sign in first!");
-                    return;
-                  }
-
-                  try {
-                    // Get JWT token
-                    const jwttoken = await authClient.token();
-
-                    const response = await fetch(
-                      "http://localhost:5000/join-event",
-                      {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                          authorization: `Bearer ${jwttoken.data?.token}`,
-                        },
-                        body: JSON.stringify({
-                          eventId: event._id,
-                          eventTitle: event.title,
-                          eventImage: event.thumbnail,
-                          eventDate: event.eventDate,
-                          location: event.location,
-                          userEmail: session.user.email,
-                        }),
-                      }
-                    );
-
-                    const data = await response.json();
-                    alert(data.message);
-                  } catch (error) {
-                    console.log(error);
-                  }
-                }}
-                className="mt-6 w-full rounded-xl bg-[#14A06F] px-5 py-3 font-semibold text-white hover:bg-[#10875e]"
+                onClick={handleJoin}
+                disabled={joining || sessionPending}
+                className="mt-6 w-full rounded-xl bg-[#14A06F] px-5 py-3 font-semibold text-white hover:bg-[#10875e] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Join Event
+                {joining ? "Joining..." : "Join Event"}
               </button>
+
+              {joinMessage && (
+                <p
+                  className={`mt-3 text-center text-sm font-medium ${
+                    joinMessage.type === "success"
+                      ? "text-[#14A06F]"
+                      : "text-red-500"
+                  }`}
+                >
+                  {joinMessage.text}
+                </p>
+              )}
+
+              {!sessionPending && !session && (
+                <p className="mt-3 text-center text-xs text-gray-400 dark:text-gray-500">
+                  <Link href="/signin" className="font-semibold text-[#14A06F] underline">
+                    Sign in
+                  </Link>{" "}
+                  to join this event.
+                </p>
+              )}
 
               <p className="mt-4 text-center text-xs text-gray-400 dark:text-gray-500">
                 Join this event and make a difference!

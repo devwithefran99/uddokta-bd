@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
+import ToastProvider from "@/components/shared/ToastProvider";
 import { Belgrano } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Navbar />
           {children}
           <Footer />
+          <ToastProvider />
         </ThemeProvider>
       </body>
     </html>

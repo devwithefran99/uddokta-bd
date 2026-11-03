@@ -76,7 +76,7 @@ export default function Home() {
             <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
               {slide.title}
               <br />
-              <span className="text-[#F0562F]">{slide.highlight}</span>
+              <span >{slide.highlight}</span>
             </h1>
 
             <p className="mt-5 max-w-xl text-sm leading-7 text-gray-200 sm:text-base md:text-lg">

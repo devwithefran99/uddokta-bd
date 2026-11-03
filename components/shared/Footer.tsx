@@ -1,6 +1,7 @@
 
 
 import Link from "next/link";
+import Image from "next/image";
 import { Facebook, Instagram, Linkedin, Mail, MapPin } from "lucide-react";
 
 // Evaluate once per server start instead of during render; `new Date()` inside
@@ -15,9 +16,16 @@ export default function Footer() {
 
           {/* Brand */}
           <div>
-            <Link href="/" className="text-2xl font-bold text-white">
-              Uddokta<span className="text-[#14A06F]">-BD</span>
-            </Link>
+            <Link href="/" className="flex items-center">
+          <Image
+            src="/Image/uddokta-logo.png"
+            alt="Uddokta-BD Logo"
+            width={180}
+            height={60}
+            priority
+            className="h-12 w-auto object-contain"
+          />
+        </Link>
 
             <p className="mt-4 max-w-sm text-sm leading-7 text-gray-400">
               Connecting people, creating opportunities, and building

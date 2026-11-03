@@ -19,36 +19,63 @@ type JoinedEvent = {
 };
 
 export default function JoinedEventsPage() {
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
 
   const [events, setEvents] = useState<JoinedEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  const signedIn = Boolean(session?.user?.email);
+  const showLoading = isPending || (signedIn && loading);
 
   useEffect(() => {
-    async function getJoinedEvents() {
-      if (!session?.user?.email) {
-        setLoading(false);
-        return;
-      }
+    if (isPending || !session?.user?.email) return;
 
+    let cancelled = false;
+
+    async function getJoinedEvents() {
       try {
-        const response = await fetch(
-          `http://localhost:5000/joined-events?email=${session.user.email}`
-        );
+        // /joined-events is protected: it needs the better-auth JWT.
+        const { data: token, error: tokenError } = await authClient.token();
+
+        if (tokenError || !token?.token) {
+          throw new Error("Your session expired. Please sign in again.");
+        }
+
+        const response = await fetch("http://localhost:5000/joined-events", {
+          headers: { authorization: `Bearer ${token.token}` },
+          cache: "no-store",
+        });
 
         const data = await response.json();
-        setEvents(data);
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to load joined events");
+        }
+
+        if (!cancelled) setEvents(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.log(error);
+        if (cancelled) return;
+
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to load joined events";
+
+        setLoadError(message);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
     getJoinedEvents();
-  }, [session]);
 
-  if (loading) {
+    return () => {
+      cancelled = true;
+    };
+  }, [isPending, session?.user?.email]);
+
+  if (showLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <p className="text-gray-500 dark:text-gray-400">Loading joined events...</p>
@@ -56,7 +83,7 @@ export default function JoinedEventsPage() {
     );
   }
 
-  if (!session) {
+  if (!signedIn) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
@@ -94,10 +121,20 @@ export default function JoinedEventsPage() {
           </p>
         </div>
 
-        {events.length === 0 ? (
+        {loadError ? (
           <div className="rounded-2xl bg-white dark:bg-gray-900 py-16 text-center shadow-sm">
             <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-              You haven't joined any events yet!
+              Could Not Load Joined Events
+            </h2>
+
+            <p className="mt-2 text-gray-500 dark:text-gray-400">
+              {loadError}
+            </p>
+          </div>
+        ) : events.length === 0 ? (
+          <div className="rounded-2xl bg-white dark:bg-gray-900 py-16 text-center shadow-sm">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+              You haven&apos;t joined any events yet!
             </h2>
 
             <p className="mt-2 text-gray-500 dark:text-gray-400">

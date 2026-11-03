@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -25,57 +24,66 @@ export default function CreateEventPage() {
   const today = new Date().toLocaleDateString("en-CA");
 
   const [eventType, setEventType] = useState("");
-const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-const handleCreateEvent = async (e: FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+  const handleCreateEvent = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-  const form = e.currentTarget;
-  const formData = new FormData(form);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
 
-  const eventData = {
-  title: formData.get("title"),
-  description: formData.get("description"),
-  eventType: eventType,
-  thumbnail: formData.get("thumbnail"),
-  location: formData.get("location"),
-  eventDate: eventDate,
-  creatorEmail: session?.user?.email,
-};
+    const eventData = {
+      title: formData.get("title"),
+      description: formData.get("description"),
+      eventType: eventType,
+      thumbnail: formData.get("thumbnail"),
+      location: formData.get("location"),
+      eventDate: eventDate,
+    };
 
-  if (!eventType) {
-    alert("Please select an event type!");
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    const response = await fetch("http://localhost:5000/events", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(eventData),
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      alert("Event created successfully!");
-      form.reset();
-      setEventDate("");
-      setEventType("");
-    } else {
-      alert(result.message);
+    if (!eventType) {
+      alert("Please select an event type!");
+      return;
     }
-  } catch (error) {
-    console.log(error);
-    alert("Something went wrong!");
-  } finally {
-    setLoading(false);
-  }
-};
+
+    try {
+      setLoading(true);
+
+      // Get JWT Token
+      const jwttoken = await authClient.token();
+
+      if (jwttoken.error || !jwttoken.data?.token) {
+        alert("Please login first!");
+        return;
+      }
+
+      // Send event data with JWT Token
+      const response = await fetch("http://localhost:5000/events", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${jwttoken.data.token}`,
+        },
+        body: JSON.stringify(eventData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Event created successfully!");
+        form.reset();
+        setEventDate("");
+        setEventType("");
+      } else {
+        alert(result.message);
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Something went wrong!");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950 px-4 py-12 sm:px-6 lg:px-8">
@@ -127,7 +135,7 @@ const handleCreateEvent = async (e: FormEvent<HTMLFormElement>) => {
             <div className="space-y-2">
               <Label htmlFor="eventType">Event Type</Label>
 
-             <Select value={eventType} onValueChange={setEventType}>
+              <Select value={eventType} onValueChange={setEventType}>
                 <SelectTrigger id="eventType" className="h-12 w-full">
                   <SelectValue placeholder="Select event type" />
                 </SelectTrigger>
@@ -218,13 +226,13 @@ const handleCreateEvent = async (e: FormEvent<HTMLFormElement>) => {
             {/* Submit Button */}
             <div className="border-t border-gray-100 dark:border-gray-800 pt-6">
               <Button
-  type="submit"
-  disabled={loading}
-  className="h-12 w-full bg-[#14A06F] text-base font-semibold hover:bg-[#10875E]"
->
-  <Plus size={19} className="mr-2" />
-  {loading ? "Creating Event..." : "Create Event"}
-</Button>
+                type="submit"
+                disabled={loading}
+                className="h-12 w-full bg-[#14A06F] text-base font-semibold hover:bg-[#10875E]"
+              >
+                <Plus size={19} className="mr-2" />
+                {loading ? "Creating Event..." : "Create Event"}
+              </Button>
             </div>
 
           </form>

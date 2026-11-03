@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CalendarDays, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "react-toastify";
 
+const API_URL = "http://localhost:5000";
+
 type Event = {
   _id: string;
   title: string;
@@ -25,94 +27,159 @@ type Event = {
   eventDate: string;
 };
 
+// Protected routes on the API expect a JWT from better-auth as a Bearer token,
+// not an email in the query string.
+async function getAuthHeaders() {
+  const { data, error } = await authClient.token();
+
+  if (error || !data?.token) {
+    throw new Error("Your session expired. Please sign in again.");
+  }
+
+  return {
+    "Content-Type": "application/json",
+    authorization: `Bearer ${data.token}`,
+  };
+}
+
+async function fetchMyEvents(): Promise<Event[]> {
+  const headers = await getAuthHeaders();
+
+  const response = await fetch(`${API_URL}/my-events`, {
+    headers,
+    cache: "no-store",
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to load events");
+  }
+
+  return Array.isArray(data) ? data : [];
+}
+
 export default function ManageEventsPage() {
 
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
   const [myEvents, setMyEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
-  // Page open hole automatic data fetch
+  const signedIn = Boolean(session?.user?.email);
+  const showLoading = isPending || (signedIn && loading);
+
+  // Wait for the session before calling a protected route.
   useEffect(() => {
-    async function getEvents() {
+    if (isPending || !session?.user?.email) return;
+
+    let cancelled = false;
+
+    async function load() {
       try {
-        const response = await fetch(  `http://localhost:5000/my-events?email=${session?.user?.email}`);
-        const data = await response.json();
-        setMyEvents(data);
+        const events = await fetchMyEvents();
+
+        if (cancelled) return;
+
+        setMyEvents(events);
+        setLoadError("");
       } catch (error) {
-        console.log(error);
-        toast.error("Failed to load events!");
+        if (cancelled) return;
+
+        const message =
+          error instanceof Error ? error.message : "Failed to load events";
+
+        setLoadError(message);
+        toast.error(message);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
-    getEvents();
-  }, [session]);
+    load();
 
-  const handleUpdateEvent = async (event: FormEvent<HTMLFormElement>) => {
-  event.preventDefault();
+    return () => {
+      cancelled = true;
+    };
+  }, [isPending, session?.user?.email, reloadKey]);
 
-  if (!selectedEvent) return;
-
-  const formData = new FormData(event.currentTarget);
-
-  const updatedEvent = {
-    title: formData.get("title"),
-    description: formData.get("description"),
-    eventType: formData.get("eventType"),
-    location: formData.get("location"),
-    thumbnail: formData.get("thumbnail"),
-    eventDate: selectedEvent.eventDate,
+  const reloadMyEvents = () => {
+    setLoading(true);
+    setReloadKey((key) => key + 1);
   };
 
-  try {
-    const response = await fetch(
-      `http://localhost:5000/events/${selectedEvent._id}`,
-      {
+  const handleUpdateEvent = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!selectedEvent) return;
+
+    const formData = new FormData(event.currentTarget);
+
+    const updatedEvent = {
+      title: formData.get("title"),
+      description: formData.get("description"),
+      eventType: formData.get("eventType"),
+      location: formData.get("location"),
+      thumbnail: formData.get("thumbnail"),
+      eventDate: formData.get("eventDate") || selectedEvent.eventDate,
+    };
+
+    try {
+      const headers = await getAuthHeaders();
+
+      const response = await fetch(`${API_URL}/events/${selectedEvent._id}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(updatedEvent),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(data.message || "Event updated successfully!");
+        setSelectedEvent(null);
+        reloadMyEvents();
+      } else {
+        toast.error(data.message || "Failed to update event!");
       }
-    );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update event!";
 
-    const data = await response.json();
-
-    if (response.ok) {
-      toast.success("Event updated successfully!");
-      setSelectedEvent(null);
-
-      const res = await fetch("http://localhost:5000/events");
-      const events = await res.json();
-      setMyEvents(events);
-    } else {
-      toast.error(data.message);
+      toast.error(message);
     }
-  } catch (error) {
-    console.log(error);
-    toast.error("Failed to update event!");
-  }
-};
+  };
 
-const handleDeleteEvent = async (id: string) => {
-  const result = await fetch(`http://localhost:5000/events/${id}`, {
-    method: "DELETE",
-  });
+  const handleDeleteEvent = async (id: string) => {
+    if (!window.confirm("Delete this event? This cannot be undone.")) return;
 
-  const data = await result.json();
+    try {
+      const headers = await getAuthHeaders();
 
-  console.log(data);
+      const response = await fetch(`${API_URL}/events/${id}`, {
+        method: "DELETE",
+        headers,
+      });
 
-  if (data.deletedCount > 0) {
-    alert("Event deleted successfully!");
+      const data = await response.json();
 
-    const res = await fetch("http://localhost:5000/events");
-    const events = await res.json();
-    setMyEvents(events);
-  }
-};
+      // The API answers with { success, message } - there is no deletedCount.
+      if (!response.ok || !data.success) {
+        toast.error(data.message || "Failed to delete event!");
+        return;
+      }
+
+      toast.success(data.message || "Event deleted successfully!");
+      reloadMyEvents();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to delete event!";
+
+      toast.error(message);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950 py-12">
@@ -151,8 +218,38 @@ const handleDeleteEvent = async (id: string) => {
         </div>
 
         {/* Events */}
-        {loading ? (
+        {showLoading ? (
           <p className="py-10 text-center text-gray-500 dark:text-gray-400">Loading events...</p>
+        ) : !signedIn ? (
+          <div className="rounded-xl bg-white dark:bg-gray-900 py-16 text-center">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+              Please Sign In
+            </h2>
+            <p className="mt-2 text-gray-500 dark:text-gray-400">
+              You need to be signed in to manage your events.
+            </p>
+            <Link
+              href="/signin"
+              className="mt-5 inline-block rounded-lg bg-[#14A06F] px-5 py-3 font-semibold text-white"
+            >
+              Sign In
+            </Link>
+          </div>
+        ) : loadError ? (
+          <div className="rounded-xl bg-white dark:bg-gray-900 py-16 text-center">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+              Could Not Load Your Events
+            </h2>
+            <p className="mt-2 text-gray-500 dark:text-gray-400">
+              {loadError}
+            </p>
+            <button
+              onClick={reloadMyEvents}
+              className="mt-5 rounded-lg bg-[#14A06F] px-5 py-3 font-semibold text-white hover:bg-[#10865D]"
+            >
+              Try Again
+            </button>
+          </div>
         ) : myEvents.length === 0 ? (
           <div className="rounded-xl bg-white dark:bg-gray-900 py-16 text-center">
             <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
@@ -180,6 +277,7 @@ const handleDeleteEvent = async (id: string) => {
                     src={event.thumbnail}
                     alt={event.title}
                     fill
+                    unoptimized
                     className="object-cover"
                   />
                 </div>
@@ -277,6 +375,17 @@ const handleDeleteEvent = async (id: string) => {
                   <Input
                     name="location"
                     defaultValue={selectedEvent.location}
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Event Date
+                  </label>
+                  <Input
+                    name="eventDate"
+                    type="date"
+                    defaultValue={selectedEvent.eventDate.slice(0, 10)}
                   />
                 </div>
 
