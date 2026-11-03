@@ -2,6 +2,7 @@ import HeroSection from "@/components/home/HeroSection";
 import ImpactStats from "@/components/home/ImpactStats";
 import RecentEvents from "@/components/home/RecentEvents";
 import GallerySection from "@/components/home/GallerySection";
+import NewsletterSection from "@/components/home/NewsletterSection";
 
 
 const page = () => {
@@ -12,6 +13,7 @@ const page = () => {
             <RecentEvents /> 
 
             <GallerySection />
+            <NewsletterSection />
     </div>
   );
 };
