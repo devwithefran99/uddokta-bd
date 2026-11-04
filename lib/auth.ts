@@ -13,6 +13,14 @@ export const auth = betterAuth({
     emailAndPassword: { 
     enabled: true, 
   }, 
+  user: {
+    changeEmail: {
+      enabled: true,
+      // No email provider is configured, so allow unverified accounts to
+      // change their email immediately instead of sending a verification link.
+      updateEmailWithoutVerification: true,
+    },
+  },
   socialProviders: {
         google: { 
             clientId: process.env.GOOGLE_CLIENT_ID as string, 

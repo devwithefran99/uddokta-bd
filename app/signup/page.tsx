@@ -2,22 +2,25 @@
 "use client";
 
 import Link from "next/link";
-import { User, Mail, Lock, ArrowRight } from "lucide-react";
+import { User, Mail, Lock, ArrowRight, ImageIcon } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { authClient, signIn } from "@/lib/auth-client";
 import { toast } from "react-toastify";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 type SignUpErrors = {
   name?: string;
   email?: string;
   password?: string;
+  photoURL?: string;
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const urlPattern = /^https?:\/\/\S+$/i;
 const MIN_PASSWORD_LENGTH = 8;
 
 export default function SignUpPage() {
+  const router = useRouter();
   const [errors, setErrors] = useState<SignUpErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -32,6 +35,7 @@ export default function SignUpPage() {
     name: string;
     email: string;
     password: string;
+    photoURL?: string;
   }): SignUpErrors => {
     const nextErrors: SignUpErrors = {};
 
@@ -53,6 +57,10 @@ export default function SignUpPage() {
       nextErrors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
     }
 
+    if (user.photoURL && !urlPattern.test(user.photoURL)) {
+      nextErrors.photoURL = "Please enter a valid image URL (http or https).";
+    }
+
     return nextErrors;
   };
 
@@ -68,6 +76,7 @@ export default function SignUpPage() {
       name: String(formData.get("name") ?? "").trim(),
       email: String(formData.get("email") ?? "").trim(),
       password: String(formData.get("password") ?? ""),
+      photoURL: String(formData.get("photoURL") ?? "").trim(),
     };
 
     const nextErrors = validate(user);
@@ -81,7 +90,10 @@ export default function SignUpPage() {
     setIsSubmitting(true);
     try {
       const {data , error} = await authClient.signUp.email({
-        ...user,
+        name: user.name,
+        email: user.email,
+        password: user.password,
+        image: user.photoURL || undefined,
       })
       if (error) {
         // console.error("Error signing up:", error);
@@ -89,7 +101,7 @@ export default function SignUpPage() {
       } else {
         // console.log("User signed up successfully:", data);
         toast.success("Account created successfully!");
-        redirect ("/")
+        router.push("/");
       }
     } finally {
       setIsSubmitting(false);
@@ -181,6 +193,38 @@ export default function SignUpPage() {
             {errors.email && (
               <p id="email-error" className="mt-1.5 text-xs text-red-500">
                 {errors.email}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="photoURL" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Profile Photo URL <span className="text-gray-400 dark:text-gray-500">(optional)</span>
+            </label>
+            <div className="relative">
+              <ImageIcon size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <input
+                id="photoURL"
+                name="photoURL"
+                type="url"
+                placeholder="https://example.com/photo.jpg"
+                aria-invalid={Boolean(errors.photoURL)}
+                aria-describedby={errors.photoURL ? "photoURL-error" : "photoURL-hint"}
+                onChange={() => clearError("photoURL")}
+                className={`w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition focus:ring-2 ${
+                  errors.photoURL
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                    : "border-gray-200 dark:border-gray-700 focus:border-[#14A06F] focus:ring-[#14A06F]/10"
+                }`}
+              />
+            </div>
+            {errors.photoURL ? (
+              <p id="photoURL-error" className="mt-1.5 text-xs text-red-500">
+                {errors.photoURL}
+              </p>
+            ) : (
+              <p id="photoURL-hint" className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
+                Leave blank to use the default avatar.
               </p>
             )}
           </div>

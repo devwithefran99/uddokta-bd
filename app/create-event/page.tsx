@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { CalendarDays, ImagePlus, MapPin, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
+import { toast } from "react-toastify";
 import {
   Select,
   SelectContent,
@@ -15,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
 
 type EventErrors = {
   title?: string;
@@ -35,11 +37,17 @@ const isValidUrl = (value: string) => {
 };
 
 export default function CreateEventPage() {
+  const router = useRouter();
   const { data: session } = authClient.useSession();
   const [eventDate, setEventDate] = useState("");
 
-  // Today's date for preventing past dates
-  const today = new Date().toLocaleDateString("en-CA");
+  // Today's date for preventing past dates. Computed after mount so the
+  // current time isn't read during prerender (Next.js blocking-route guard).
+  const [today, setToday] = useState("");
+
+  useEffect(() => {
+    setToday(new Date().toLocaleDateString("en-CA"));
+  }, []);
 
   const [eventType, setEventType] = useState("");
   const [loading, setLoading] = useState(false);
@@ -121,7 +129,7 @@ export default function CreateEventPage() {
       const jwttoken = await authClient.token();
 
       if (jwttoken.error || !jwttoken.data?.token) {
-        alert("Please login first!");
+        toast.error("Please login first!");
         return;
       }
 
@@ -138,17 +146,18 @@ export default function CreateEventPage() {
       const result = await response.json();
 
       if (response.ok) {
-        alert("Event created successfully!");
+        toast.success("Event created successfully!");
         form.reset();
         setEventDate("");
         setEventType("");
         setErrors({});
+        router.push("/manage-events");
       } else {
-        alert(result.message);
+        toast.error(result.message);
       }
     } catch (error) {
       console.log(error);
-      alert("Something went wrong!");
+      toast.error("Something went wrong!");
     } finally {
       setLoading(false);
     }

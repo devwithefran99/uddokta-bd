@@ -46,8 +46,9 @@ Next.js 16.4 App Router at the repo root (`app/`, not `src/app`), React 19, Tail
   - `GET /upcoming-events`, `GET /events`, `GET /events/:id`, `POST /events`, `PATCH/DELETE /events/:id`, `POST /join-event`, `GET /joined-events?email=`.
   - Don't move these fetches into `app/api` unless the backend move is intentional.
 - Auth is better-auth + MongoDB: `lib/auth.ts` (db `uddokta-bd`), mounted by `app/api/auth/[...all]/route.ts`, client/hooks in `lib/auth-client.ts`. Needs `MONGODB_URI`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` in `.env` (gitignored).
-- `proxy.ts` at the repo root is Next 16's Proxy (renamed middleware). It redirects unauthenticated `/events/*`, `/manage-events`, and `/joined-events` to `/signin`. It only checks that the session cookie exists (better-auth's optimistic check), not that the session is valid; `/create-event` is not in the matcher.
-- Routes: `/`, `/about`, `/upcoming-events`, `/events/[id]`, `/create-event`, `/manage-events`, `/joined-events`, `/signin`, `/signup`. `signin` still links to `/register`; the real route is `/signup`.
+  - `/profile` edits the user through `authClient.updateUser` (name, `image`) and `authClient.changeEmail` (email). Email changes only work because `user.changeEmail` is enabled with `updateEmailWithoutVerification`; there is no email provider, so verified (Google) accounts cannot change email.
+- `proxy.ts` at the repo root is Next 16's Proxy (renamed middleware). It redirects unauthenticated `/create-event`, `/manage-events`, `/joined-events`, and `/profile` to `/signin`. It only checks that the session cookie exists (better-auth's optimistic check), not that the session is valid.
+- Routes: `/`, `/about`, `/upcoming-events`, `/events/[id]`, `/create-event`, `/manage-events`, `/joined-events`, `/profile`, `/signin`, `/signup`. `signin` still links to `/register`; the real route is `/signup`.
 - `components/ui` holds shadcn primitives, `components/shared` Navbar/Footer, `components/home` landing sections. `@/*` maps to the repo root.
 - `toast` from `react-toastify` is called in Navbar/auth/manage-events, but no `ToastContainer` is mounted in `app/layout.tsx`, so toasts do not render yet.
 

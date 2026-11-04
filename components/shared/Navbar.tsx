@@ -11,6 +11,7 @@ import {
   X,
   ArrowUpRight,
   User,
+  UserRound,
   LogOut,
   PlusCircle,
   CalendarDays,
@@ -155,6 +156,14 @@ const Navbar = () => {
                       Joined Events
                     </Link>
 
+                    <Link
+                      href="/profile"
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-green-50 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                      <UserRound size={16} />
+                      My Profile
+                    </Link>
+
                     <hr className="my-1 border-gray-100 dark:border-gray-700" />
 
                     <button
@@ -274,6 +283,15 @@ const Navbar = () => {
                   >
                     <User size={17} />
                     Joined Events
+                  </Link>
+
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-green-50 dark:text-gray-300 dark:hover:bg-gray-800"
+                  >
+                    <UserRound size={17} />
+                    My Profile
                   </Link>
 
                   <button
