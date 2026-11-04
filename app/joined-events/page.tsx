@@ -35,14 +35,14 @@ export default function JoinedEventsPage() {
 
     async function getJoinedEvents() {
       try {
-        // /joined-events is protected: it needs the better-auth JWT.
+       
         const { data: token, error: tokenError } = await authClient.token();
 
         if (tokenError || !token?.token) {
           throw new Error("Your session expired. Please sign in again.");
         }
 
-        const response = await fetch("http://localhost:5000/joined-events", {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/joined-events`, {
           headers: { authorization: `Bearer ${token.token}` },
           cache: "no-store",
         });

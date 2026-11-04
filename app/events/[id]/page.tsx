@@ -57,8 +57,7 @@ export default function EventDetailsPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  // `params` is a runtime API. Under Cache Components it must be read inside a
-  // Suspense boundary, otherwise the route can't prerender its static shell.
+ 
   return (
     <Suspense fallback={<EventDetailsLoading />}>
       <EventDetails params={params} />
@@ -95,7 +94,7 @@ function EventDetails({
 
       try {
         // Event details is a public API - no token needed here.
-        const response = await fetch(`http://localhost:5000/events/${id}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${id}`, {
           cache: "no-store",
         });
 
@@ -155,7 +154,7 @@ function EventDetails({
         return;
       }
 
-      const response = await fetch("http://localhost:5000/join-event", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/join-event`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

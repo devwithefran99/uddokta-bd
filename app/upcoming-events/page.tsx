@@ -33,7 +33,7 @@ export default function UpcomingEventsPage() {
     async function getEvents() {
       try {
         const response = await fetch(
-          "http://localhost:5000/upcoming-events"
+          `${process.env.NEXT_PUBLIC_API_URL}/upcoming-events`
         );
 
         const data = await response.json();
